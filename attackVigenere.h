@@ -22,6 +22,7 @@ std::string getPlainText(std::vector<std::string>& substrings, int cipherLength,
 double abs(double value);
 
 int findLength(std::string& cipherText);
+std::vector<int> findPatternDistances(std::string& cipherText);
 void addDivisors(int n, std::vector<int>& divisors);
 int findGCD(std::vector<int>& divisors);
 

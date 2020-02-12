@@ -222,9 +222,7 @@ std::string getPlainText(std::vector<std::string>& substrings, int cipherLength,
     return plainText;
 }
 
-double abs(double value){
-    return (value < 0) ? -value : value;
-}
+double abs(double value){ return (value < 0) ? -value : value; }
 
 std::vector<int> findPatternDistances(std::string& cipherText)
 {
@@ -254,6 +252,7 @@ std::vector<int> findPatternDistances(std::string& cipherText)
         }
         i += patternSize;
     }
+    return distances;
 }
 
 int findLength(std::string& cipherText)
