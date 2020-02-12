@@ -21,13 +21,11 @@ int main()
     std::string cipherLength1("RZZOXZCYTYRPGPCJZYPMPWZHTDLYPILXAWPZQCLYOZXEPIEHCTEEPYTYPYRWTDSESTDAWLTYEPIETDRZTYREZDPCGPLDPILXAWPEPDEEZDPPHSPESPCZCYZEESPDELETDETNDRTGPYMJESPACZQPDDZCLCPRZZOZCYZETQESPJLCPESPYTDSZFWOQTYOGPCJPLDTWJESLEXJVPJHLDZYWJXLOPZQZYPWPEEPC");
     std::string cipherLength5("RSARZZVZWARIHSEJSZSOPPAKVDEZSKLQBZRZJDOAOSYHRIXIFVEXQBVYIZUYTWTHUTWBZNTRFSKEMEUBTRSHBDIDJRLWQLNXTXSGPWFHBDIQKUPXTSEZVZCGELQGGLXUGGTGEUVGIZPLELQDEZJQGFZVMFRRSARBCRAHVQXTSLLVQHUPRUGUZYXRSTRPJRCCQOFTPKHULXYMXPCIOFZRXMZLHQCSZRQZREXQF");
 
-    findLength(cipherLength5);
-/*
     std::string plaintext;
-    //attackCipherWithStatistics(cipherLength1);
-    plaintext = Vigenere(cipherLength1);
+    plaintext = monoAlphabeticAttack(cipherLength5,5);
     std::cout << plaintext << "\n";
 
+/*
     plaintext = Vigenere(cipherLength5);
     std::cout << plaintext << "\n";
 
@@ -38,58 +36,58 @@ int main()
     return 0;
 }
 
+/*
+ * @Param:
+ *      cipherText:   Reference to a Mono-alphabetic cipher text (capital letters only)
+ *      keyLength:    keyLength to use to break the cipher
+ * @Return:
+ *      plainText:    cipherText input deciphered with a key of size keyLength.
+ *                      Statistical approach used to find the best shift to break the cipher
+*/
+std::string monoAlphabeticAttack(const std::string& cipherText, const int keyLength)
+{
+    std::string vigenereKey(keyLength,'-');
 
-// Decrypt Vigenere with unknown key-length
-std::string Vigenere(std::string cipherText) {
-    int key_length = MIN_KEY_LENGTH;
-
-    // A. Find key-length in the range MIN to MAX KEY_LENGTH
-    {
-        std::vector<double> bestSquareFreq;
-        for (; key_length <= MAX_KEY_LENGTH; ++key_length)
-        {
-            std::vector<std::string> substrings = getSubstrings(cipherText, key_length);
-            if (substrings[0].size() < MIN_NUMBER_CHARACTERS)
-                continue;
-
-            std::vector<double> squareFreq;
-            for (std::string sub: substrings)
-            {
-                std::vector<double> frequencies = getFrequencies(sub);
-                squareFreq.push_back(getSumOfSquareProbabilities(frequencies));
-            }
-            int bestIndex = returnIndexClosestToValue(squareFreq, SQUARE_PROB_SUM);
-            bestSquareFreq.push_back(squareFreq[bestIndex]);
-        }
-        key_length = MIN_KEY_LENGTH + returnIndexClosestToValue(bestSquareFreq, SQUARE_PROB_SUM);
-    }
-
-    // B. Decrypt Vigenere with known key-length
-    std::vector<std::string> substrings = getSubstrings(cipherText, key_length);
-    std::string vigenereKey(key_length,'-');
-    for (int i=0; i < key_length; ++i)
+    std::vector<std::string> substrings = getSubstrings(cipherText, keyLength);
+    for (int i=0; i < keyLength; ++i)
         vigenereKey[i] = attackCipherWithStatistics(substrings[i]);
 
-    // C. Combine substrings to get plaintext
-    std::string plainText = getPlainText(substrings, cipherText.length(), key_length);
+    std::string plainText = getPlainText(substrings, cipherText.length(), keyLength);
     std::cout << "key= " << vigenereKey << "\n";
     return plainText;
 }
 
+
+// Decrypt Vigenere with unknown key-length
+std::string Vigenere(const std::string& cipherText)
+{
+    std::vector<int> keyLengths;
+    int bestLength = findLength(cipherText, keyLengths);
+
+    if(bestLength == -1)
+    {
+        for(auto key: keyLengths){
+            monoAlphabeticAttack(cipherText, key);
+        }
+    }
+    else return monoAlphabeticAttack(cipherText, bestLength);
+}
+
 /*
  * @Param:
- *      cipherText: cipher Text to rearrange into 'length' alphabets
- *      key_length:     key length of the Vigenere cipher
+ *      inputString:    Reference to a string
+ *      key_length:     Number of substrings that inputString will be split into
  * @Return:
- *      array[key_length]
-            array[i]: string of characters cypherText[i + k * key_length]
+ *      substrings:     Vector of strings; size = key_length
+            substrings[i]: Every key_length characters of inputString starting from i
+                            inputString[i + k * key_length]
 */
-std::vector<std::string> getSubstrings(const std::string& cipherText, unsigned long key_length)
+std::vector<std::string> getSubstrings(const std::string& inputString, const unsigned long key_length)
 {
     std::vector<std::string> substrings;
-
-    unsigned long longerSubstrings = cipherText.length() % key_length; //substrings element that have a length longer of +1 compared to the rest of the elements
-    unsigned long stringLength = cipherText.length() / key_length;
+    //substrings element that have a length longer of +1 compared to the rest of the elements
+    unsigned long longerSubstrings = inputString.length() % key_length;
+    unsigned long stringLength = inputString.length() / key_length;
 
     for (unsigned long i=0; i < longerSubstrings; ++i) substrings.push_back(std::string(stringLength+1,'c'));
     for (unsigned long i=longerSubstrings; i < key_length; ++i) substrings.push_back(std::string(stringLength, 'c'));
@@ -97,8 +95,8 @@ std::vector<std::string> getSubstrings(const std::string& cipherText, unsigned l
     for (int i=0; i < key_length; ++i)
     {
         int z=-1;
-        for (int j=i; j<cipherText.length(); j+=key_length)
-            substrings[i][++z] = cipherText[j];
+        for (int j=i; j < inputString.length(); j+=key_length)
+            substrings[i][++z] = inputString[j];
     }
 
     return substrings;
@@ -106,32 +104,38 @@ std::vector<std::string> getSubstrings(const std::string& cipherText, unsigned l
 
 /*
  * @Param:
- *      cipherText: cipher Text with only upper case characters (if only upper case change 'A' to 'a'
+ *      inputString:  Reference to a string text with characters only (if only lower case change 'A' to 'a')
  * @Return:
- *      frequencies[26]; probability of alphabet k in the cipherText
+ *      frequencies:  Vector of double values; size = 26; frequencies[k] == probability of alphabet k in the inputString
 */
-std::vector<double> getFrequencies(const std::string& cipherString)
+std::vector<double> getFrequencies(const std::string& inputString)
 {
     std::vector<double> frequencies(26,0);
 
-    unsigned long cipherLength = cipherString.length();
-    for (int i = 0; i < cipherLength; ++i) {
-        frequencies[cipherString[i] - 'A'] += 1;
+    unsigned long inputLength = inputString.length();
+    for (int i = 0; i < inputLength; ++i) {
+        frequencies[inputString[i] - 'A'] += 1;
     }
     for (int i = 0; i < 26; ++i) {
-        frequencies[i] /= cipherLength;
+        frequencies[i] /= inputLength;
     }
     return frequencies;
 }
 
-std::vector<double> getSquareFreqPermutation(std::vector<double>& frequencies)
+/*
+ * @Param:
+ *      frequencies:            Vector of double values
+ * @Return:
+ *      squareFreqPermutation:  sum of P(k) * frequencies[ (k + shift) %26]; k:0->26 excluded
+*/
+std::vector<double> getSquareFreqPermutation(const std::vector<double>& frequencies)
 {
     std::vector<double> squareFreqPermutation(26,0);
-    for (int shift = 0; shift < 26; ++shift) {
+    for (int shift = 0; shift < 26; ++shift)
+    {
         double sum(0);
-        for (int j = 0; j < 26; ++j) {
+        for (int j = 0; j < 26; ++j)
             sum += frequencies[(shift+j)%26] * english_probabilities[j];
-        }
         squareFreqPermutation[shift] = sum;
     }
     return squareFreqPermutation;
@@ -146,19 +150,19 @@ double getSumOfSquareProbabilities(std::vector<double>& probVec)
 
 /*
  * @Param:
- *      allSquareProbabilities = vector of J where J is the sum of the square of probabilities
- *      value = the value that we want to find in our vector
- *      squareProbToSave = double pointer
+ *      inputValues:    Reference to a vector of double values
+ *      target_value:   The value to find in the vector
+ *      savedValue:     Pointer to a double value
  * @Return:
- *      index: the index in the vector whose value is closest to @target_value
- *      squareProbToSave: allSquareProbabilities[index]
+ *      index:          Index that points to the value that is closest to @target_value in the vector
+ *      savedValue:     inputValues[index]
 */
-int returnIndexClosestToValue(std::vector<double> allSquareProbabilities, double target_value, double* squareProbToSave)
+int returnIndexClosestToValue(const std::vector<double>& inputValues, double target_value, double* savedValue)
 {
     int index = 0 , i = 0;
     double best_prob(0);
-    double epsilon = abs(target_value - allSquareProbabilities[0]);
-    for (double val : allSquareProbabilities)
+    double epsilon = abs(target_value - inputValues[0]);
+    for (double val : inputValues)
     {
         if (abs(target_value - val) < epsilon) {
             epsilon = abs(target_value - val);
@@ -167,10 +171,17 @@ int returnIndexClosestToValue(std::vector<double> allSquareProbabilities, double
         }
         ++i;
     }
-    if (squareProbToSave!= nullptr) *squareProbToSave = best_prob;
+    if (savedValue != nullptr) *savedValue = best_prob;
     return index;
 }
 
+/*
+ * @Param:
+ *      cipherString:   Reference to a Mono-alphabetic cipher text (capital letters only)
+ * @Return:
+ *      cipherString:   Input deciphered
+ *      key:            key used to decipher
+*/
 char attackCipherWithStatistics(std::string& cipherString)
 {
     // 1. Get frequency of each letter
@@ -193,13 +204,13 @@ char attackCipherWithStatistics(std::string& cipherString)
 
 /*
  * @Param:
- *      substrings:     vector of strings (deciphered)
+ *      substrings:     Reference to vector of strings (deciphered)
  *      cipherLength:   length of the cipher text
  *      key_length:     key length of the Vigenere cipher
  * @Return:
  *      plaintext (rearrangement of the strings)
 */
-std::string getPlainText(std::vector<std::string>& substrings, int cipherLength, int key_length)
+std::string getPlainText(const std::vector<std::string>& substrings, const int cipherLength, const int key_length)
 {
     unsigned long longerSubstrings = cipherLength % key_length;
     unsigned long subStringsSize = cipherLength / key_length; //size of substrings (except for the longer ones; that are size+1)
@@ -222,18 +233,18 @@ std::string getPlainText(std::vector<std::string>& substrings, int cipherLength,
     return plainText;
 }
 
-double abs(double value){ return (value < 0) ? -value : value; }
+double abs(const double value){ return (value < 0) ? -value : value; }
 
 
 /*
  * @Param:
- *      cipherText: cipherText whose key length we try to guess
- *      keyLengths:   Empty vector
+ *      cipherText:   Reference to a poly-alphabetic cipher text whose key length we try to guess
+ *      keyLengths:   Reference to an empty vector
  * @Return:
  *      keyLengths:   All possible key lengths
- *      GCD:          Greatest Common Divisor (best length)
+ *      GCD:          Greatest Common Divisor (this is the BEST possible key size); -1 if none
 */
-int findLength(std::string& cipherText, std::vector<int>& keyLengths)
+int findLength(const std::string& cipherText, std::vector<int>& keyLengths)
 {
     /*  find patterns and save distance between them
         get the divisors of those distances == possible key lengths
@@ -246,7 +257,6 @@ int findLength(std::string& cipherText, std::vector<int>& keyLengths)
 
     return GCD;
     // TODO can you have no divisors ? if so what happens to my program. can I return keyLength=0 ?
-    // TODO OR instead of having 100% result, I can perform mono alphabetic attack with each value in divisors and the user will find the output that make sense
 
     /*
     if (GCD == 1) //maybe also GCD == 2
@@ -273,7 +283,13 @@ int findLength(std::string& cipherText, std::vector<int>& keyLengths)
     */
 }
 
-std::vector<int> findPatternDistances(std::string& cipherText)
+/*
+ * @Param:
+ *      cipherText:  Reference to a poly-alphabetic cipher text in which we try to find repetition of strings
+ * @Return:
+ *      distances:   Vector of all distances found
+*/
+std::vector<int> findPatternDistances(const std::string& cipherText)
 {
     std::vector<int> distances;
     int i(0);
@@ -283,7 +299,7 @@ std::vector<int> findPatternDistances(std::string& cipherText)
         int patternSize = pattern.size();
 
         for (int j = i+3; j < cipherText.length();++j) {
-            // would be nice to use compare method
+            // TODO use compare method
             if(cipherText.substr(i, patternSize) == cipherText.substr(j, patternSize))
             {
                 while(cipherText.substr(i, patternSize) == cipherText.substr(j, patternSize)){
@@ -304,12 +320,19 @@ std::vector<int> findPatternDistances(std::string& cipherText)
     return distances;
 }
 
+/*
+ * @Param:
+ *      divisors:   Vector with divisors of one or more natural number
+ * @Return:
+ *      GCD:        Greatest Common Divisor between those numbers; -1 if none
+*/
 int findGCD(std::vector<int>& divisors)
 {
     /* if divisors are unique then all Occurences are = 1
      * ==> we have to try all divisors
             return -1 to indicate this problem
     */
+    // TODO add a filter to remove divisors that have occurences < Y (only when maxOccurences>1)
 
     std::sort (divisors.begin(), divisors.end());
     std::map<int,int> occurences;
@@ -327,7 +350,14 @@ int findGCD(std::vector<int>& divisors)
     else return gcd;
 }
 
-void addDivisors(int n, std::vector<int>& divisors)
+/*
+ * @Param:
+ *      n:          Positive natural number
+ *      divisors:   Reference to an empty vector
+ * @Return:
+ *      divisors:   All divisors of n
+*/
+void addDivisors(const int n, std::vector<int>& divisors)
 {
     for (int i = 2; i < n; ++i) {
         if(n%i == 0) divisors.push_back(i);
