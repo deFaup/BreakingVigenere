@@ -224,6 +224,55 @@ std::string getPlainText(std::vector<std::string>& substrings, int cipherLength,
 
 double abs(double value){ return (value < 0) ? -value : value; }
 
+
+/*
+ * @Param:
+ *      cipherText: cipherText whose key length we try to guess
+ *      keyLengths:   Empty vector
+ * @Return:
+ *      keyLengths:   All possible key lengths
+ *      GCD:          Greatest Common Divisor (best length)
+*/
+int findLength(std::string& cipherText, std::vector<int>& keyLengths)
+{
+    /*  find patterns and save distance between them
+        get the divisors of those distances == possible key lengths
+        find GCD
+            if none return break it with stat
+    */
+    std::vector<int> distances = findPatternDistances(cipherText);
+    for(auto dist : distances) addDivisors(dist,keyLengths);
+    int GCD = findGCD(keyLengths);
+
+    return GCD;
+    // TODO can you have no divisors ? if so what happens to my program. can I return keyLength=0 ?
+    // TODO OR instead of having 100% result, I can perform mono alphabetic attack with each value in divisors and the user will find the output that make sense
+
+    /*
+    if (GCD == 1) //maybe also GCD == 2
+    {
+        std::vector<double> bestSquareFreq;
+        int keyLength(0);
+        for (auto key_length : divisors) {
+            std::vector<std::string> substrings = getSubstrings(cipherText, key_length);
+            if (substrings[0].size() < MIN_NUMBER_CHARACTERS)
+                continue;
+
+            std::vector<double> squareFreq;
+            for (std::string sub: substrings) {
+                std::vector<double> frequencies = getFrequencies(sub);
+                squareFreq.push_back(getSumOfSquareProbabilities(frequencies));
+            }
+            int bestIndex = returnIndexClosestToValue(squareFreq, SQUARE_PROB_SUM);
+            bestSquareFreq.push_back(squareFreq[bestIndex]);
+        }
+        keyLength = returnIndexClosestToValue(bestSquareFreq, SQUARE_PROB_SUM);
+        return keyLength;
+    }
+    else return GCD;
+    */
+}
+
 std::vector<int> findPatternDistances(std::string& cipherText)
 {
     std::vector<int> distances;
@@ -255,31 +304,11 @@ std::vector<int> findPatternDistances(std::string& cipherText)
     return distances;
 }
 
-int findLength(std::string& cipherText)
-{
-    /*  find patterns and save distance between them
-        get the divisors of those distances
-        find GCD
-            if ties break it with stat
-    */
-    std::vector<int> distances = findPatternDistances(cipherText);
-    std::vector<int> divisors;
-    for(auto dist : distances) addDivisors(dist,divisors);
-    int GCD = findGCD(divisors);
-
-    if (GCD == 1)
-    {
-        return 1;
-    }
-    else return GCD;
-}
-
 int findGCD(std::vector<int>& divisors)
 {
     /* if divisors are unique then all Occurences are = 1
      * ==> we have to try all divisors
-            return 1 to indicate this problem
-            then take the vector and apply stat to each of the divisors
+            return -1 to indicate this problem
     */
 
     std::sort (divisors.begin(), divisors.end());
@@ -294,8 +323,8 @@ int findGCD(std::vector<int>& divisors)
             gcd = it->first;
         }
     }
-    if(maxOccurences==1) return 1;
-    return gcd;
+    if(maxOccurences==1) return -1;
+    else return gcd;
 }
 
 void addDivisors(int n, std::vector<int>& divisors)

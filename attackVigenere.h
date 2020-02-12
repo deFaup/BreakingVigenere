@@ -21,7 +21,7 @@ char attackCipherWithStatistics(std::string& cipherString);
 std::string getPlainText(std::vector<std::string>& substrings, int cipherLength, int key_length);
 double abs(double value);
 
-int findLength(std::string& cipherText);
+int findLength(std::string& cipherText, std::vector<int>& keyLengths);
 std::vector<int> findPatternDistances(std::string& cipherText);
 void addDivisors(int n, std::vector<int>& divisors);
 int findGCD(std::vector<int>& divisors);
