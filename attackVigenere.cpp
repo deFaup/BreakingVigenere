@@ -21,9 +21,9 @@ int main()
     std::string cipherLength1("RZZOXZCYTYRPGPCJZYPMPWZHTDLYPILXAWPZQCLYOZXEPIEHCTEEPYTYPYRWTDSESTDAWLTYEPIETDRZTYREZDPCGPLDPILXAWPEPDEEZDPPHSPESPCZCYZEESPDELETDETNDRTGPYMJESPACZQPDDZCLCPRZZOZCYZETQESPJLCPESPYTDSZFWOQTYOGPCJPLDTWJESLEXJVPJHLDZYWJXLOPZQZYPWPEEPC");
     std::string cipherLength5("RSARZZVZWARIHSEJSZSOPPAKVDEZSKLQBZRZJDOAOSYHRIXIFVEXQBVYIZUYTWTHUTWBZNTRFSKEMEUBTRSHBDIDJRLWQLNXTXSGPWFHBDIQKUPXTSEZVZCGELQGGLXUGGTGEUVGIZPLELQDEZJQGFZVMFRRSARBCRAHVQXTSLLVQHUPRUGUZYXRSTRPJRCCQOFTPKHULXYMXPCIOFZRXMZLHQCSZRQZREXQF");
 
-    std::string plaintext;
-    plaintext = monoAlphabeticAttack(cipherLength5,5);
-    std::cout << plaintext << "\n";
+    std::vector<std::string> plainTexts(Vigenere(cipherLength5));
+    for (auto text:plainTexts)
+        std::cout << text << "\n\n\n";
 
 /*
     plaintext = Vigenere(cipherLength5);
@@ -49,6 +49,8 @@ std::string monoAlphabeticAttack(const std::string& cipherText, const int keyLen
     std::string vigenereKey(keyLength,'-');
 
     std::vector<std::string> substrings = getSubstrings(cipherText, keyLength);
+    if (substrings[0].size() < MIN_NUMBER_CHARACTERS)
+        return "";
     for (int i=0; i < keyLength; ++i)
         vigenereKey[i] = attackCipherWithStatistics(substrings[i]);
 
@@ -57,20 +59,26 @@ std::string monoAlphabeticAttack(const std::string& cipherText, const int keyLen
     return plainText;
 }
 
-
-// Decrypt Vigenere with unknown key-length
-std::string Vigenere(const std::string& cipherText)
+/*
+ * @Param:
+ *      cipherText:   Reference to a Poly-alphabetic cipher text that we want to decrypt without knowing the encryption key
+ * @Return:
+ *      plainText:    Vector of possible deciphered texts
+*/
+std::vector<std::string> Vigenere(const std::string& cipherText)
 {
+    std::vector<std::string> plainTexts;
     std::vector<int> keyLengths;
     int bestLength = findLength(cipherText, keyLengths);
 
     if(bestLength == -1)
     {
         for(auto key: keyLengths){
-            monoAlphabeticAttack(cipherText, key);
+            plainTexts.push_back(monoAlphabeticAttack(cipherText, key));
         }
     }
-    else return monoAlphabeticAttack(cipherText, bestLength);
+    else plainTexts.push_back(monoAlphabeticAttack(cipherText, bestLength));
+    return plainTexts;
 }
 
 /*

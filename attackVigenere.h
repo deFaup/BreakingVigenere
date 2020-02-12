@@ -11,7 +11,7 @@
 #include <vector>
 #include <string>
 
-std::string Vigenere(const std::string& cipherText);
+std::vector<std::string> Vigenere(const std::string& cipherText);
 int findLength(const std::string& cipherText, std::vector<int>& keyLengths);
 std::vector<int> findPatternDistances(const std::string& cipherText);
 void addDivisors(const int n, std::vector<int>& divisors);
@@ -24,12 +24,11 @@ std::vector<double> getFrequencies(const std::string& inputString);
 std::vector<double> getSquareFreqPermutation(const std::vector<double>& frequencies);
 int returnIndexClosestToValue(const std::vector<double>& inputValues, double target_value, double* savedValue= nullptr);
 
-
-double getSumOfSquareProbabilities(std::vector<double>& probVec);
-
 std::string getPlainText(const std::vector<std::string>& substrings, const int cipherLength, const int key_length);
 
 double abs(const double value);
+
+double getSumOfSquareProbabilities(std::vector<double>& probVec);
 
 
 #endif //ATTACKONVIGENERE_ATTACKVIGENERE_H
