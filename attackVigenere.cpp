@@ -21,9 +21,10 @@ int main()
     std::string cipherLength1("RZZOXZCYTYRPGPCJZYPMPWZHTDLYPILXAWPZQCLYOZXEPIEHCTEEPYTYPYRWTDSESTDAWLTYEPIETDRZTYREZDPCGPLDPILXAWPEPDEEZDPPHSPESPCZCYZEESPDELETDETNDRTGPYMJESPACZQPDDZCLCPRZZOZCYZETQESPJLCPESPYTDSZFWOQTYOGPCJPLDTWJESLEXJVPJHLDZYWJXLOPZQZYPWPEEPC");
     std::string cipherLength5("RSARZZVZWARIHSEJSZSOPPAKVDEZSKLQBZRZJDOAOSYHRIXIFVEXQBVYIZUYTWTHUTWBZNTRFSKEMEUBTRSHBDIDJRLWQLNXTXSGPWFHBDIQKUPXTSEZVZCGELQGGLXUGGTGEUVGIZPLELQDEZJQGFZVMFRRSARBCRAHVQXTSLLVQHUPRUGUZYXRSTRPJRCCQOFTPKHULXYMXPCIOFZRXMZLHQCSZRQZREXQF");
 
+
     std::vector<std::string> plainTexts(Vigenere(cipherLength5));
     for (auto text:plainTexts)
-        std::cout << text << "\n\n\n";
+        std::cout << text << "\n";
 
 /*
     plaintext = Vigenere(cipherLength5);
@@ -75,6 +76,8 @@ std::vector<std::string> Vigenere(const std::string& cipherText)
     {
         for(auto key: keyLengths){
             plainTexts.push_back(monoAlphabeticAttack(cipherText, key));
+            if (plainTexts.back().size()==0)
+                plainTexts.pop_back();
         }
     }
     else plainTexts.push_back(monoAlphabeticAttack(cipherText, bestLength));
